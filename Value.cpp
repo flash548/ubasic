@@ -50,9 +50,26 @@ Value::Value(double b)
 // constructor for a ARRAY variable of TYPE
 Value::Value(TYPE t, int size)
 {
+    type = t;
 	isArray = true;
-	intArray = (int *) malloc(size*sizeof(int));
+    if (t == INTEGER) {
+        intArray = (int *) malloc(size*sizeof(int));
+        for (int i = 0; i < size; i++) { intArray[i] = 0; }
+    }
+    else if (t == FLOAT) {
+        dblArray = (double *) malloc(size*sizeof(double));
+        for (int i = 0; i < size; i++) { dblArray[i] = 0.0f; }
+    }
 }
+
+// default destructor
+Value::~Value()
+{
+    //if (isArray) {
+    //    if (type== INTEGER) free(intArray);
+    //    else free(dblArray);
+   // }
+} //~Lexer
 
 
 Value operator+(const Value& v1, const Value& v2)
@@ -669,7 +686,8 @@ const char* Value::ToString()
 Value Value::index_array(int index)
 {
     if (isArray) {
-        return Value(intArray[index]);
+        if (type == INTEGER) return Value(intArray[index]);
+        else if (type == FLOAT) return Value(dblArray[index]);
     }
     
     return Value(-1);
@@ -679,5 +697,12 @@ void Value::update_array(int index, int val)
 {
     if (isArray) {
         intArray[index] = val;
+    }
+}
+
+void Value::update_array(int index, double val)
+{
+    if (isArray) {
+        dblArray[index] = val;
     }
 }

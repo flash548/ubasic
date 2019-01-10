@@ -19,6 +19,7 @@ class Lexer
 {
 //variables
 public:
+    bool repl_mode;
 	char vars[NUM_VARS][MAX_VARNAME_LEN];  // array to hold variable names
 	Value vals[NUM_VARS]; // array to hold variable values
 	int var_ptr;  // pointer to next available variable location
@@ -35,6 +36,7 @@ public:
 	Token _id();
 	Token get_next_token();
 	void eat(TokenType tokType);
+    void execute_statement(const char* line); // used for REPL mode
 	void program();
 	void statement_list();
 	void statement();
@@ -55,6 +57,7 @@ private:
 
 //functions
 public:
+    Lexer();
 	Lexer(const char* txt);
 	~Lexer();
 protected:

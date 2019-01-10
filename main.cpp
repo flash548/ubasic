@@ -13,6 +13,8 @@ using namespace std;
 #include "Value.h"
 #include "Lexer.h"
 
+bool repl = false;
+
 int main(void)
 {
 #ifdef PC_ONLY
@@ -28,8 +30,19 @@ int main(void)
 #else
 	const char* buffer = "a=0\nDIM ab(5)\nfor i=0 to 4\nprint(i)\nnext i\nEND";
 #endif
-	Lexer l(buffer);
-	l.program();
+    char cmd[256];
+    if (repl) {
+        Lexer l;
+        while (true) {
+            printf(">> ");
+            gets(cmd);
+            l.execute_statement(cmd);
+        }
+    }
+    else {
+        Lexer l(buffer);    
+        l.program();
+    }
 	
 	return 0;
 }

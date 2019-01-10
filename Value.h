@@ -19,6 +19,7 @@ class Value
 
 	public:
     int* intArray;
+    double* dblArray;
 	int number;
     double floatNumber;
 	char str[MAXSTRLENGTH];
@@ -34,8 +35,10 @@ class Value
 	Value(bool b);
     Value(double i);
 	Value(TYPE t, int size);
+    ~Value();
     Value index_array(int index);
     void update_array(int index, int val);
+    void update_array(int index, double val);
 	friend Value operator+(const Value& v1);
 	friend Value operator-(const Value& v1);
 	friend Value operator+(const Value& v1, const Value &v2);

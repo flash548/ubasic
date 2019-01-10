@@ -15,8 +15,14 @@
 #include <unistd.h>
 
 // default constructor
+Lexer::Lexer()
+{
+    repl_mode = true;
+    var_ptr = 0;
+}
 Lexer::Lexer(const char* txt)
 {
+    repl_mode = false;
 	text = txt;
 	pos = 0;
 	current_char = text[pos];
@@ -33,7 +39,7 @@ void Lexer::error()
 {
 	printf("ERROR!!! Invalid char\n");
 	printf("%s\n", current_token.value.ToString());
-	while(1){}
+	if (!repl_mode) while(1){}
 }
 
 void Lexer::advance()
@@ -198,7 +204,7 @@ Token Lexer::_id()
 	else if (nocase_cmp(name, "GOSUB") == 0) { t.type = GOSUB; t.value = Value("GOSUB"); }
 	else if (nocase_cmp(name, "ELSE") == 0) { t.type = ELSE; t.value = Value("ELSE"); }
 	else if (nocase_cmp(name, "FOR") == 0) { t.type = FOR; t.value = Value("FOR"); }
-		else if (nocase_cmp(name, "DIM") == 0) { t.type = FOR; t.value = Value("DIM"); }
+    else if (nocase_cmp(name, "AS") == 0) { t.type = AS; t.value = Value("AS"); }
     else if (nocase_cmp(name, "TO") == 0) { t.type = TO; t.value = Value("TO"); }
 	else if (nocase_cmp(name, "STEP") == 0) { t.type = STEP; t.value = Value("STEP"); }
 	else if (nocase_cmp(name, "NEXT") == 0) { t.type = NEXT; t.value = Value("NEXT"); }
@@ -481,6 +487,15 @@ void Lexer::eat(TokenType tokType)
 	else { error(); }
 }
 
+void Lexer::execute_statement(const char* line)
+{
+    text = line;
+	pos = 0;
+	current_char = text[pos];
+	current_token = get_next_token();
+    statement();
+}
+
 // program: statement_list
 void Lexer::program()
 {
@@ -516,6 +531,7 @@ void Lexer::statement()
 		if_statement();
 	else if (current_token.type == GOSUB)
 		gosub_statement();
+    
 }
 
 // statement: function_call | assignment_statement | empty
@@ -531,24 +547,47 @@ void Lexer::assignment_statement()
 	eat(ID);
     if (!newArrayOp) {
         if (current_token.type == LPAREN) {
+            // array element assignment
             eat(LPAREN);
             int index = expr().number;
             eat(RPAREN);
             eat(EQ);
             Value parentValue = lookup_var(varname);
-            parentValue.update_array(index, expr().number);
+            Value result = expr();
+            if (result.type == INTEGER) parentValue.update_array(index, result.number);
+            else if (result.type == FLOAT) parentValue.update_array(index, result.floatNumber);
         }
         else {
-            eat(EQ);
-            Value right(expr());
-            store_var(varname, right);	
+            // regular old variable assignment (non-array)
+            if (current_token.type == EQ) {
+                eat(EQ);
+                Value right(expr());
+                store_var(varname, right);	
+            }
+            else {
+                // just eval the ID
+                pos = 0;
+                current_char = text[pos];
+                current_token = get_next_token();
+                Value right(expr());
+                if (repl_mode) printf("%s\n", right.ToString()); 
+            }
         }
     }
     else {
+        // DIM a new array of given size
         eat(LPAREN);
-        Value right(INTEGER, expr().number);
+        int size = expr().number;
         eat(RPAREN);
-        store_var(varname, right);
+        eat(AS);
+        char type[10];
+        strcpy(type, current_token.value.ToString());
+        if (nocase_cmp(type, "INTEGER") == 0) { Value right(INTEGER, size); store_var(varname, right); }
+        else {
+            Value right(FLOAT, size); 
+            store_var(varname, right);
+        }
+        eat(ID);
     }
 }
 
@@ -960,9 +999,10 @@ Value Lexer::lookup_var(const char* name)
 		if (strcmp(vars[i], name) == 0) break;
 	}
 	
-	//if (i >= 20) {
-		//printf("Var not found! %s\n", name); while(1);
-	//}
+	if (i >= NUM_VARS) {
+		printf("Var not found! %s\n", name); 
+        if (!repl_mode) while(1);
+	}
 	
 	return vals[i];
 }
@@ -987,8 +1027,8 @@ bool Lexer::store_var(const char* name, Value v)
 	}
 	
 	if (var_ptr >= NUM_VARS) {
-		//printf("number of vars exceeded\n");
-		while(1) {}
+		printf("number of vars exceeded\n");
+		if (!repl_mode) while(1) {}
 	}
 		
 	return false;
