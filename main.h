@@ -5,7 +5,7 @@
  *  Author: z
  */ 
 
-#define PC_ONLY
+//#define PC_ONLY
 
 #ifndef MAIN_H_
 #define MAIN_H_

@@ -11,8 +11,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <Arduino.h>
 #include <unistd.h>
+
+#if ! defined PC_ONLY
+  #define printf SerialUSB.println
+#endif
 
 // default constructor
 Lexer::Lexer()
@@ -22,7 +26,7 @@ Lexer::Lexer()
 }
 Lexer::Lexer(const char* txt)
 {
-    repl_mode = false;
+  repl_mode = false;
 	text = txt;
 	pos = 0;
 	current_char = text[pos];
@@ -38,7 +42,7 @@ Lexer::~Lexer()
 void Lexer::error()
 {
 	printf("ERROR!!! Invalid char\n");
-	printf("%s\n", current_token.value.ToString());
+	printf(current_token.value.ToString());
 	if (!repl_mode) while(1){}
 }
 
@@ -569,7 +573,7 @@ void Lexer::assignment_statement()
                 current_char = text[pos];
                 current_token = get_next_token();
                 Value right(expr());
-                if (repl_mode) printf("%s\n", right.ToString()); 
+                if (repl_mode) printf(right.ToString()); 
             }
         }
     }
@@ -743,9 +747,9 @@ Value Lexer::function_call()
 		Value right(expr());
         eat(RPAREN);
 #ifdef PC_ONLY
-		printf("%s\n", right.ToString());
+		printf(right.ToString());
 #else
-		lcd_printf(right.ToString());
+		SerialUSB.println(right.ToString());
 #endif
 		return right;
 	}
@@ -756,7 +760,7 @@ Value Lexer::function_call()
 #ifdef PC_ONLY
 		usleep(right.number*1000);
 #else
-		_delay_ms(right.number);
+		delay(right.number);
 #endif
 		return right;
 	}
@@ -764,7 +768,7 @@ Value Lexer::function_call()
 		// delay in mS
 		Value right(expr());
 		eat(RPAREN);
-		printf("%i\n", right.number);
+		printf(right.number);
 		return right;
 	}
 	
@@ -999,7 +1003,8 @@ Value Lexer::lookup_var(const char* name)
 	}
 	
 	if (i >= NUM_VARS) {
-		printf("Var not found! %s\n", name); 
+		printf("Var not found!:");
+		printf(name); 
         if (!repl_mode) while(1);
 	}
 	
