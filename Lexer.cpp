@@ -187,7 +187,6 @@ Token Lexer::_id()
 
 	if (nocase_cmp(name, "PRINT") == 0) { t.type = FUNC_CALL; t.value = Value(name); }
 	else if (nocase_cmp(name, "DELAY") == 0) { t.type = FUNC_CALL;	t.value = Value(name); }
-	else if (nocase_cmp(name, "PORTC") == 0) { t.type = FUNC_CALL;	t.value = Value(name); }
 	else if (nocase_cmp(name, "TRUE") == 0) { t.type = BOOL; t.value = Value(true); }
 	else if (nocase_cmp(name, "FALSE") == 0) { t.type = BOOL; t.value = Value(false); }
 	else if (nocase_cmp(name, "DIM") == 0) { t.type = DIM; t.value = Value("DIM"); }
